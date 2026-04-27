@@ -1,11 +1,11 @@
 const firebaseConfig = {
-    apiKey: "PASTE_YOUR_API_KEY",
-    authDomain: "PASTE_YOUR_AUTH_DOMAIN",
-    projectId: "PASTE_YOUR_PROJECT_ID",
-    storageBucket: "PASTE_YOUR_STORAGE_BUCKET",
-    messagingSenderId: "PASTE_YOUR_SENDER_ID",
-    appId: "PASTE_YOUR_APP_ID"
-};
+  apiKey: "AIzaSyBPjsKU-KXE5EyNzB1CYyqXvSpo5mxUEY8",
+  authDomain: "gigtracker-11789.firebaseapp.com",
+  projectId: "gigtracker-11789",
+  storageBucket: "gigtracker-11789.firebasestorage.app",
+  messagingSenderId: "289051884721",
+  appId: "1:289051884721:web:3e7b9468d9f979c761b690",
+  };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
