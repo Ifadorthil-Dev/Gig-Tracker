@@ -8,15 +8,28 @@
     <meta name="theme-color" content="#0a0a0f">
     <title>Gig Tracker</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <div id="app">
+    <div id="login-screen" class="login-screen">
+        <div class="login-card">
+            <div class="login-icon">💼</div>
+            <h1 class="login-title">Gig Tracker</h1>
+            <p class="login-sub">Enter your username to get started</p>
+            <div class="form-group">
+                <input type="text" id="login-username" placeholder="e.g. sasha" autocomplete="off" autocapitalize="none">
+            </div>
+            <button class="btn btn-primary" id="btn-login">
+                <span class="btn-icon">→</span> Enter
+            </button>
+        </div>
+    </div>
+    <div id="app" style="display:none;">
 
         <header id="app-header">
             <h1 id="header-title">New Gig</h1>
+            <button id="header-logout" class="header-logout-btn">⏻</button>
         </header>
         <main id="tab-new" class="tab-content active">
             <form id="gig-form" autocomplete="off">
@@ -150,6 +163,16 @@
                 <div class="empty-title">No gigs yet</div>
                 <div class="empty-sub">Create one from the New Gig tab.</div>
             </div>
+            <div class="form-section" style="margin-top:16px;">
+                <div class="section-header"><span class="section-icon">💾</span> Backup & Restore</div>
+                <button class="btn btn-green btn-sm" onclick="exportBackup()">
+                    <span class="btn-icon">📤</span> Export Backup File
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">
+                    <span class="btn-icon">📥</span> Import Backup File
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importBackup(event)">
+            </div>
         </main>
 
         <div id="detail-modal" class="modal" style="display:none;">
@@ -179,6 +202,8 @@
 
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

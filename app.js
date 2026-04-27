@@ -1,20 +1,149 @@
-let gigs = JSON.parse(localStorage.getItem('gigtracker_events') || '[]');
+// ═══════════════════════════════════════════════════
+// FIREBASE CONFIG — PASTE YOUR VALUES BELOW
+// ═══════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBPjsKU-KXE5EyNzB1CYyqXvSpo5mxUEY8",
+  authDomain: "gigtracker-11789.firebaseapp.com",
+  projectId: "gigtracker-11789",
+  storageBucket: "gigtracker-11789.firebasestorage.app",
+  messagingSenderId: "289051884721",
+  appId: "1:289051884721:web:3e7b9468d9f979c761b690",
+  measurementId: "G-XWMQ1SE9TM"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let currentUser = localStorage.getItem('gigtracker_user') || '';
+let gigs = [];
 let calMonth = new Date().getMonth();
 let calYear = new Date().getFullYear();
 let calSelectedDate = new Date();
 
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btn-login').addEventListener('click', handleLogin);
+    document.getElementById('login-username').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+    });
+
+    if (currentUser) {
+        loadFromCloud(currentUser);
+    } else {
+        showLoginScreen();
+    }
+});
+
+// ═══════════════════════════════════════════════════
+// LOGIN / LOGOUT
+// ═══════════════════════════════════════════════════
+function showLoginScreen() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+}
+
+function showApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+
     initTabs();
     initForm();
     initCalendar();
     renderGigsList();
     setDefaultFormDate();
 
+    document.getElementById('header-logout').addEventListener('click', handleLogout);
+
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});
     }
-});
+}
 
+function handleLogin() {
+    const input = document.getElementById('login-username');
+    const username = input.value.trim().toLowerCase();
+
+    if (!username) {
+        showToast('Enter a username');
+        return;
+    }
+
+    if (username.length < 2 || username.length > 30) {
+        showToast('Username must be 2–30 characters');
+        return;
+    }
+
+    currentUser = username;
+    localStorage.setItem('gigtracker_user', currentUser);
+    loadFromCloud(currentUser);
+}
+
+function handleLogout() {
+    if (!confirm('Log out of "' + currentUser + '"?')) return;
+
+    currentUser = '';
+    gigs = [];
+    localStorage.removeItem('gigtracker_user');
+    localStorage.removeItem('gigtracker_events');
+    showLoginScreen();
+    document.getElementById('login-username').value = '';
+}
+
+// ═══════════════════════════════════════════════════
+// CLOUD SYNC
+// ═══════════════════════════════════════════════════
+async function loadFromCloud(username) {
+    try {
+        const doc = await db.collection('users').doc(username).get();
+
+        if (doc.exists && doc.data().gigs) {
+            gigs = doc.data().gigs;
+        } else {
+            const local = JSON.parse(localStorage.getItem('gigtracker_events') || '[]');
+            gigs = local;
+
+            if (gigs.length > 0) {
+                saveToCloud();
+            }
+        }
+    } catch (err) {
+        gigs = JSON.parse(localStorage.getItem('gigtracker_events') || '[]');
+    }
+
+    saveLocal();
+    showApp();
+}
+
+function saveGigs() {
+    saveLocal();
+    saveToCloud();
+}
+
+function saveLocal() {
+    localStorage.setItem('gigtracker_events', JSON.stringify(gigs));
+}
+
+async function saveToCloud() {
+    if (!currentUser) return;
+
+    try {
+        await db.collection('users').doc(currentUser).set({
+            gigs: gigs,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (err) {
+        // Offline — data is safe in localStorage
+    }
+}
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
 function initTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
     const titles = { new: 'New Gig', calendar: 'Calendar', gigs: 'My Gigs' };
@@ -40,6 +169,10 @@ function initTabs() {
 function switchTab(tab) {
     document.querySelector(`.tab-btn[data-tab="${tab}"]`).click();
 }
+
+// ═══════════════════════════════════════════════════
+// FORM
+// ═══════════════════════════════════════════════════
 function initForm() {
     const form = document.getElementById('gig-form');
     const hasEnd = document.getElementById('gig-has-end');
@@ -107,16 +240,16 @@ function createGig() {
     setDefaultFormDate();
 }
 
-function saveGigs() {
-    localStorage.setItem('gigtracker_events', JSON.stringify(gigs));
-}
-
 function deleteGig(id) {
     gigs = gigs.filter(g => g.id !== id);
     saveGigs();
     renderGigsList();
     renderCalendar();
 }
+
+// ═══════════════════════════════════════════════════
+// PAY CALCULATION
+// ═══════════════════════════════════════════════════
 function parsePay(gig) {
     const raw = (gig.payRate || '').replace(/\$/g, '').replace(/,/g, '').trim().toLowerCase();
     const match = raw.match(/(\d+\.?\d*)/);
@@ -151,6 +284,9 @@ function formatPay(amount) {
     return '$' + amount.toFixed(2);
 }
 
+// ═══════════════════════════════════════════════════
+// WEEKLY EARNINGS
+// ═══════════════════════════════════════════════════
 function getWeekRange(date) {
     const d = new Date(date);
     const day = d.getDay();
@@ -182,6 +318,10 @@ function formatWeekRange(date) {
     const opts = { month: 'short', day: 'numeric' };
     return start.toLocaleDateString('en-US', opts) + ' – ' + end.toLocaleDateString('en-US', opts);
 }
+
+// ═══════════════════════════════════════════════════
+// DATE / TIME HELPERS
+// ═══════════════════════════════════════════════════
 function formatDateInput(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -220,6 +360,10 @@ function isSameDay(dateStr, dateObj) {
         && d.getMonth() === dateObj.getMonth()
         && d.getDate() === dateObj.getDate();
 }
+
+// ═══════════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════════
 function initCalendar() {
     document.getElementById('cal-prev').addEventListener('click', () => {
         calMonth--;
@@ -330,6 +474,10 @@ function renderCalendarDayEvents() {
         container.appendChild(card);
     });
 }
+
+// ═══════════════════════════════════════════════════
+// GIGS LIST
+// ═══════════════════════════════════════════════════
 function renderGigsList() {
     const list = document.getElementById('gigs-list');
     const empty = document.getElementById('gigs-empty');
@@ -387,6 +535,10 @@ function renderGigsList() {
         list.appendChild(card);
     });
 }
+
+// ═══════════════════════════════════════════════════
+// DETAIL MODAL
+// ═══════════════════════════════════════════════════
 function showDetailModal(gig) {
     const modal = document.getElementById('detail-modal');
     const body = document.getElementById('detail-body');
@@ -480,6 +632,9 @@ function showDetailModal(gig) {
     });
 }
 
+// ═══════════════════════════════════════════════════
+// EMAIL SUMMARY
+// ═══════════════════════════════════════════════════
 function buildEmailSummary(gig) {
     const line = '──────────────────────────────────────────';
     let lines = [];
@@ -540,6 +695,9 @@ function fallbackCopy(text) {
     showToast('Copied to clipboard ✓');
 }
 
+// ═══════════════════════════════════════════════════
+// CALENDAR INTEGRATION
+// ═══════════════════════════════════════════════════
 function downloadICS(id) {
     const gig = gigs.find(g => g.id === id);
     if (!gig) return;
@@ -634,6 +792,70 @@ function openGoogleCalendar(id) {
     window.open('https://calendar.google.com/calendar/render?' + params.toString(), '_blank');
 }
 
+// ═══════════════════════════════════════════════════
+// BACKUP & RESTORE
+// ═══════════════════════════════════════════════════
+function exportBackup() {
+    if (gigs.length === 0) {
+        showToast('No gigs to export');
+        return;
+    }
+
+    const data = JSON.stringify(gigs, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'gig-tracker-backup-' + formatDateInput(new Date()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    showToast('Backup downloaded ✓');
+}
+
+function importBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+
+            if (!Array.isArray(imported)) {
+                showToast('Invalid backup file');
+                return;
+            }
+
+            const existingIds = new Set(gigs.map(g => g.id));
+            let added = 0;
+
+            imported.forEach(g => {
+                if (!existingIds.has(g.id)) {
+                    gigs.push(g);
+                    added++;
+                }
+            });
+
+            gigs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            saveGigs();
+            renderGigsList();
+            renderCalendar();
+
+            showToast(added + ' gig' + (added === 1 ? '' : 's') + ' restored ✓');
+        } catch (err) {
+            showToast('Could not read backup file');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// ═══════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════
 function esc(str) {
     if (!str) return '';
     const div = document.createElement('div');

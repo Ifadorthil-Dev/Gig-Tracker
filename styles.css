@@ -902,3 +902,86 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     background: var(--purple-deep);
     border-radius: 4px;
 }
+
+.login-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg-abyss);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 500;
+    padding: 20px;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+}
+
+.login-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+.login-title {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--purple-glow), var(--red-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+}
+
+.login-sub {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+}
+
+.login-card .form-group input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid rgba(75, 0, 130, 0.4);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 14px 16px;
+    font-size: 1.1rem;
+    font-family: inherit;
+    outline: none;
+    text-align: center;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+}
+
+.login-card .form-group input:focus {
+    border-color: var(--purple-mid);
+    box-shadow: 0 0 0 3px var(--purple-faint);
+}
+
+.login-card .form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.header-logout-btn {
+    background: none;
+    border: 1px solid rgba(107, 0, 0, 0.4);
+    color: var(--red-glow);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+    transition: all 0.2s;
+}
+
+.header-logout-btn:active {
+    background: var(--red-blood);
+    color: white;
+}
