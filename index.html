@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>Gig Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="app">
+
+        <header id="app-header">
+            <h1 id="header-title">New Gig</h1>
+        </header>
+        <main id="tab-new" class="tab-content active">
+            <form id="gig-form" autocomplete="off">
+
+                <div class="form-section">
+                    <div class="section-header"><span class="section-icon">💼</span> Event Details</div>
+                    <div class="form-group">
+                        <label for="gig-title">JOB / EVENT TITLE</label>
+                        <input type="text" id="gig-title" placeholder="e.g. Security Detail — Convention Center" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gig-company">COMPANY NAME</label>
+                        <input type="text" id="gig-company" placeholder="e.g. Apex Staffing" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gig-location">LOCATION / ADDRESS</label>
+                        <input type="text" id="gig-location" placeholder="e.g. 777 NE MLK Jr Blvd, Portland, OR" required>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header"><span class="section-icon">🕐</span> Date & Time</div>
+                    <div class="form-group">
+                        <label for="gig-date">DATE</label>
+                        <input type="date" id="gig-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gig-start">START TIME</label>
+                        <input type="time" id="gig-start" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="toggle-group">
+                            <label for="gig-has-end">Set End Time</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="gig-has-end">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" id="end-time-group" style="display:none;">
+                        <label for="gig-end">END TIME</label>
+                        <input type="time" id="gig-end">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header"><span class="section-icon">👤</span> Pay & Contact</div>
+                    <div class="form-group">
+                        <label for="gig-pay">PAY RATE</label>
+                        <input type="text" id="gig-pay" placeholder="e.g. $25/hr or $200 flat">
+                    </div>
+                    <div class="form-group">
+                        <label for="gig-contact">ON-SITE CONTACT NAME</label>
+                        <input type="text" id="gig-contact" placeholder="e.g. Marcus Johnson">
+                    </div>
+                    <div class="form-group">
+                        <label for="gig-phone">CONTACT PHONE</label>
+                        <input type="tel" id="gig-phone" placeholder="e.g. (503) 555-0199">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-header"><span class="section-icon">📝</span> Notes</div>
+                    <div class="form-group">
+                        <textarea id="gig-notes" rows="3" placeholder="Dress code, parking info, equipment to bring..."></textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btn-create">
+                    <span class="btn-icon">✓</span> Create Gig
+                </button>
+                <button type="button" class="btn btn-danger" id="btn-clear">
+                    <span class="btn-icon">🗑</span> Clear Form
+                </button>
+            </form>
+        </main>
+        <main id="tab-calendar" class="tab-content">
+            <div id="weekly-earnings-banner" class="earnings-banner">
+                <div class="earnings-label">WEEK OF <span id="week-range"></span></div>
+                <div class="earnings-row">
+                    <div class="earnings-stat">
+                        <span class="earnings-amount" id="week-pay">$0.00</span>
+                        <span class="earnings-sub">Est. Pay</span>
+                    </div>
+                    <div class="earnings-divider"></div>
+                    <div class="earnings-stat">
+                        <span class="earnings-count" id="week-gig-count">0</span>
+                        <span class="earnings-sub">Gigs</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cal-nav" class="cal-nav">
+                <button class="cal-nav-btn" id="cal-prev">◀</button>
+                <span id="cal-month-label" class="cal-month-label">April 2026</span>
+                <button class="cal-nav-btn" id="cal-next">▶</button>
+            </div>
+
+            <div class="cal-grid">
+                <div class="cal-day-header">Sun</div>
+                <div class="cal-day-header">Mon</div>
+                <div class="cal-day-header">Tue</div>
+                <div class="cal-day-header">Wed</div>
+                <div class="cal-day-header">Thu</div>
+                <div class="cal-day-header">Fri</div>
+                <div class="cal-day-header">Sat</div>
+            </div>
+            <div id="cal-days" class="cal-grid cal-days"></div>
+
+            <div id="cal-day-detail" class="cal-day-detail">
+                <h3 id="cal-selected-label">Select a day</h3>
+                <div id="cal-day-events"></div>
+            </div>
+        </main>
+        <main id="tab-gigs" class="tab-content">
+            <div id="gigs-week-banner" class="earnings-banner">
+                <div class="earnings-row">
+                    <div class="earnings-info">
+                        <span class="earnings-title">This Week</span>
+                        <span class="earnings-range" id="gigs-week-range"></span>
+                    </div>
+                    <div class="earnings-info right">
+                        <span class="earnings-amount" id="gigs-week-pay">$0.00</span>
+                        <span class="earnings-range" id="gigs-week-count">0 gigs</span>
+                    </div>
+                </div>
+            </div>
+            <div id="gigs-list"></div>
+            <div id="gigs-empty" class="empty-state">
+                <div class="empty-icon">📋</div>
+                <div class="empty-title">No gigs yet</div>
+                <div class="empty-sub">Create one from the New Gig tab.</div>
+            </div>
+        </main>
+
+        <div id="detail-modal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Gig Created</h2>
+                    <button class="modal-close" id="modal-close">✕</button>
+                </div>
+                <div id="detail-body" class="modal-body"></div>
+            </div>
+        </div>
+
+        <nav id="tab-bar">
+            <button class="tab-btn active" data-tab="new">
+                <span class="tab-icon">＋</span>
+                <span class="tab-label">New Gig</span>
+            </button>
+            <button class="tab-btn" data-tab="calendar">
+                <span class="tab-icon">📅</span>
+                <span class="tab-label">Calendar</span>
+            </button>
+            <button class="tab-btn" data-tab="gigs">
+                <span class="tab-icon">📋</span>
+                <span class="tab-label">My Gigs</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
